@@ -4,3 +4,6 @@ vendored/
 
 # Compiled binaries
 *.pyc
+
+# Packaged Lambda function
+requeue_lambda.zip
