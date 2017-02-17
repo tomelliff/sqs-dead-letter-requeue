@@ -10,7 +10,6 @@ eg. python seed_queue.py test_queue
 """
 
 sqs_queue_name = sys.argv[1]
-print(sqs_queue_name)
 
 sqs = boto3.resource('sqs')
 queue = sqs.get_queue_by_name(QueueName=sqs_queue_name)
