@@ -1,4 +1,4 @@
-SOURCES=handler.py requeue.py
+SOURCES=requeue.py
 CLOUDFORMATION_TEMPLATES=cloudformation/requeue_lambda.yaml
 PACKAGE_NAME=requeue_lambda.zip
 AWS_ACCOUNT_ID=$(shell aws sts get-caller-identity --output text --query Account)

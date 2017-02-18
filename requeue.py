@@ -3,6 +3,16 @@ from __future__ import print_function
 import boto3
 import os
 
+def handler(event, context):
+    messages_moved = requeue_all_messages()
+
+    response = {
+        "statusCode": 200,
+        "body": "Total messages moved: {}".format(messages_moved)
+    }
+
+    return response
+
 def requeue_all_messages():
     active_queue_name = os.environ['QUEUE_NAME']
     dead_letter_queue_name = active_queue_name + "_dead_letter"
@@ -11,6 +21,8 @@ def requeue_all_messages():
 
     active_queue = sqs.get_queue_by_name(QueueName=active_queue_name)
     dead_letter_queue = sqs.get_queue_by_name(QueueName=dead_letter_queue_name)
+
+    total_messages_moved = 0
 
     while True:
         messages = dead_letter_queue.receive_messages(
@@ -36,6 +48,10 @@ def requeue_all_messages():
                 })
             active_queue.send_messages(Entries=requeued_messages_to_send)
             dead_letter_queue.delete_messages(Entries=requeued_messages_to_delete)
+
+        total_messages_moved += number_of_messages
+
+    return total_messages_moved
 
 if __name__ == '__main__':
     requeue_all_messages()

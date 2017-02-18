@@ -68,7 +68,7 @@ Resources:
         - Requeue
         - !Ref QueueName
       Description: Requeues messages from dead letter queue
-      Handler: handler.handler
+      Handler: requeue.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: !Join
