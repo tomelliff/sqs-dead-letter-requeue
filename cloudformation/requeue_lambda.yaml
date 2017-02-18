@@ -3,6 +3,10 @@ Parameters:
   QueueName:
     Type: String
     Description: Name of the main queue. DLQ should be called "${QueueName}_dead_letter"
+  ScheduleExpression:
+    Type: String
+    Description: Cron expression for when to automatically trigger the requeue Lambda function. Defaults to once per day at midnight UTC
+    Default: cron(0 0 * * ? *)
 Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -79,3 +83,21 @@ Resources:
           QUEUE_NAME: !Ref QueueName
       Runtime: python2.7
       Timeout: 60
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Scheduled event to trigger the Requeue function
+      ScheduleExpression: !Ref ScheduleExpression
+      State: ENABLED
+      Targets:
+        -
+          Arn: !GetAtt RequeueFunction.Arn
+          Id: RequeueFunction
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: RequeueFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduledRule.Arn
