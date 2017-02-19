@@ -79,7 +79,6 @@ python seed_queue.py ${QUEUE_NAME}_dead_letter
 
 ## TODO
 
-- Write tests
 - CloudFormation template that includes both Queues
 - Create CloudFormation "Launch Stack" buttons
 - Terraform module for deploying Lambda function

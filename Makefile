@@ -1,5 +1,4 @@
 SOURCES=requeue.py
-TESTS=
 CLOUDFORMATION_TEMPLATES=cloudformation/requeue_lambda.yaml
 PACKAGE_NAME=requeue_lambda.zip
 AWS_ACCOUNT_ID=$(shell aws sts get-caller-identity --output text --query Account)
@@ -10,13 +9,11 @@ $(PACKAGE_NAME): $(SOURCES)
 
 build: test_code $(PACKAGE_NAME)
 
-test_code:
+test:
 	python -m unittest discover
 
 validate_cloudformation: $(CLOUDFORMATION_TEMPLATES)
 	$(foreach CLOUDFORMATION_TEMPLATE,$(CLOUDFORMATION_TEMPLATES),aws cloudformation validate-template --template-body file://$(CLOUDFORMATION_TEMPLATE);)
-
-test: test_code validate_cloudformation
 
 create_deploy_bucket:
 	region_constraints='--region $(AWS_DEFAULT_REGION) --create-bucket-configuration LocationConstraint=$(AWS_DEFAULT_REGION)'; \
