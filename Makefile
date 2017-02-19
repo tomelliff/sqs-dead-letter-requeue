@@ -7,7 +7,7 @@ DEPLOY_BUCKET_NAME=lambda-functions-$(AWS_DEFAULT_REGION)-$(AWS_ACCOUNT_ID)
 $(PACKAGE_NAME): $(SOURCES)
 	zip $(PACKAGE_NAME) $(SOURCES)
 
-build: test_code $(PACKAGE_NAME)
+build: test $(PACKAGE_NAME)
 
 test:
 	python -m unittest discover
