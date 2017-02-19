@@ -1,7 +1,10 @@
 AWS_ACCOUNT_ID=`aws sts get-caller-identity --output text --query 'Account'`
 
 bootstrap:
-	region_constraints='--region eu-west-1 --create-bucket-configuration LocationConstraint=eu-west-1'; \
+ifndef AWS_DEFAULT_REGION
+    $(error AWS_DEFAULT_REGION is not set)
+endif
+	region_constraints='--region $(AWS_DEFAULT_REGION) --create-bucket-configuration LocationConstraint=$(AWS_DEFAULT_REGION)'; \
 	aws s3api create-bucket --bucket tfstate-lambda-functions-$(AWS_ACCOUNT_ID) $${region_constraints}
 
 remote:
