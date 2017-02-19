@@ -26,7 +26,8 @@ make ship
 ```
 
 ### Deploy Lambda function plus scheduled event
-Use the CloudFormation template provided (`cloudformation/requeue_lambda.yaml`)
+ - Use the CloudFormation template provided (`cloudformation/requeue_lambda.yaml`)
+ - Or alternatively use the Terraform module (`terraform/modules/requeue_lambda`)
 
 ## Running it locally
 
@@ -81,4 +82,3 @@ python seed_queue.py ${QUEUE_NAME}_dead_letter
 
 - CloudFormation template that includes both Queues
 - Create CloudFormation "Launch Stack" buttons
-- Terraform module for deploying Lambda function

@@ -7,3 +7,7 @@ vendored/
 
 # Packaged Lambda function
 requeue_lambda.zip
+
+# Terraform state and modules
+terraform/usage/terraform.tfstate*
+terraform/usage/.terraform/*
