@@ -7,6 +7,11 @@ from moto import mock_sqs
 
 import requeue
 
+os.environ['QUEUE_NAME']='queue_name'
+
+active_queue_name = os.environ['QUEUE_NAME']
+dead_letter_queue_name = active_queue_name + "_dead_letter"
+
 class TestHandler(unittest.TestCase):
     def setUp(self):
         self.patcher = patch('requeue.requeue_all_messages')
@@ -34,62 +39,37 @@ class TestHandler(unittest.TestCase):
 
 @mock_sqs
 class TestGetSqsQueues(unittest.TestCase):
-    os.environ['QUEUE_NAME']='queue_name'
-
-    active_queue_name = os.environ['QUEUE_NAME']
-    dead_letter_queue_name = active_queue_name + "_dead_letter"
-
     def setUp(self):
         sqs = boto3.resource('sqs')
 
-        active_queue = sqs.create_queue(QueueName=self.active_queue_name)
-        dead_letter_queue = sqs.create_queue(QueueName=self.dead_letter_queue_name)
+        active_queue = sqs.create_queue(QueueName=active_queue_name)
+        dead_letter_queue = sqs.create_queue(QueueName=dead_letter_queue_name)
 
     def test_get_sqs_queues_returns_active_and_dead_letter_queues(self):
         self.assertEqual(len(requeue._get_sqs_queues()), 2)
-        self.assertTrue(requeue._get_sqs_queues()[0].url.endswith(self.active_queue_name))
-        self.assertTrue(requeue._get_sqs_queues()[1].url.endswith(self.dead_letter_queue_name))
+        self.assertTrue(requeue._get_sqs_queues()[0].url.endswith(active_queue_name))
+        self.assertTrue(requeue._get_sqs_queues()[1].url.endswith(dead_letter_queue_name))
 
-
+@mock_sqs
 class TestRequeueAllMessages(unittest.TestCase):
-    def setUp(self):
-        self.patcher = patch('requeue._get_sqs_queues')
-        self.mock_get_sqs_queues = self.patcher.start()
-        self.mock_get_sqs_queues.return_value = []
-
-    class MockQueue(object):
-        def __init__(self, queue_name):
-            self.url = queue_name
-            self.messages = []
-
-        def put_messages_on_queue(number_of_messages):
-            self.messages = [ 'message' ] * number_of_messages
-
-        def receive_messages(self, **kwargs):
-            return self.messages
-
-    def provide_empty_queue(self, queue_name):
-        mock_queue = self.MockQueue(queue_name)
-        self.mock_get_sqs_queues.return_value.append(mock_queue)
-
-    def provide_empty_queues(self):
-        active_queue = self.provide_empty_queue('queue_name')
-        dead_letter_queue = self.provide_empty_queue('queue_name_dead_letter')
-
-        return (active_queue, dead_letter_queue)
-
-    def put_messages_on_queue(self, number_of_messages, queue_name):
-        self.mock_get_sqs_queues.return_value = 'foo'
+    def put_messages_on_queue(self, queue_name, number_of_messages):
+        messages = [{
+            'Id': '1',
+            'MessageBody': 'message body'
+        }] * number_of_messages
+        sqs = boto3.resource('sqs')
+        queue = sqs.get_queue_by_name(QueueName=queue_name)
+        queue.send_messages(Entries=messages)
 
     def test_empty_queue_returns_zero_messages_moved(self):
-        self.provide_empty_queues()
-        self.assertEqual(requeue.requeue_all_messages(),
+        self.assertEqual(requeue.requeue_all_messages(poll_wait=0),
                          0)
 
-
-    def tearDown(self):
-        self.patcher.stop()
-
+    def test_non_empty_queue_returns_correct_messages_moved(self):
+        number_of_messages = 10
+        self.put_messages_on_queue(dead_letter_queue_name, number_of_messages)
+        self.assertEqual(requeue.requeue_all_messages(poll_wait=0),
+                         number_of_messages)
 
 if __name__ == '__main__':
     unittest.main()

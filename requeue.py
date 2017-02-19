@@ -24,16 +24,16 @@ def _get_sqs_queues():
 
     return (active_queue, dead_letter_queue)
 
-def requeue_all_messages():
+def requeue_all_messages(max_messages_per_poll=10, poll_wait=20, visibility_timeout=20):
     active_queue, dead_letter_queue = _get_sqs_queues()
 
     total_messages_moved = 0
 
     while True:
         messages = dead_letter_queue.receive_messages(
-                                            MaxNumberOfMessages=10,
-                                            WaitTimeSeconds=20,
-                                            VisibilityTimeout=20)
+                                    MaxNumberOfMessages=max_messages_per_poll,
+                                    WaitTimeSeconds=poll_wait,
+                                    VisibilityTimeout=visibility_timeout)
         number_of_messages = len(messages)
         if number_of_messages == 0:
             print('Requeuing messages done.')
