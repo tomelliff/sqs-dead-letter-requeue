@@ -13,7 +13,7 @@ def handler(event, context):
 
     return response
 
-def requeue_all_messages():
+def _get_sqs_queues():
     active_queue_name = os.environ['QUEUE_NAME']
     dead_letter_queue_name = active_queue_name + "_dead_letter"
 
@@ -21,6 +21,11 @@ def requeue_all_messages():
 
     active_queue = sqs.get_queue_by_name(QueueName=active_queue_name)
     dead_letter_queue = sqs.get_queue_by_name(QueueName=dead_letter_queue_name)
+
+    return (active_queue, dead_letter_queue)
+
+def requeue_all_messages():
+    active_queue, dead_letter_queue = _get_sqs_queues()
 
     total_messages_moved = 0
 
